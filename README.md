@@ -272,7 +272,61 @@ rm -rf node_modules package-lock.json
 npm install
 ```
 
-## Production Build
+## Docker Deployment (Recommended)
+
+The easiest way to run the entire application is using Docker:
+
+### Prerequisites
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- Docker Compose (included with Docker Desktop)
+
+### Run with Docker Compose
+
+```bash
+# From the project root
+docker-compose up --build
+```
+
+ThiDocker Architecture
+
+The application uses a multi-container setup:
+
+- **API Container**: .NET 8 runtime with SQLite database
+- **Frontend Container**: Nginx serving built React app
+- **Network**: Bridge network for inter-container communication
+- **Volume**: Persistent storage for database
+
+The frontend uses Nginx as a reverse proxy, forwarding `/api` requests to the backend container.
+
+## Future Enhancements
+
+Potential improvements for the application:
+
+- Authentication and authorization
+- Search and filter functionality
+- Pagination for driver list
+- Sorting by column
+- Team management CRUD
+- Driver statistics and analytics
+- Unit and integration tests
+- CI/CD pipeline
+- Kubernetes deploymentown
+```
+
+### View Logs
+
+```bash
+# All services
+docker-compose logs -f
+
+# Just API
+docker-compose logs -f api
+
+# Just frontend
+docker-compose logs -f frontend
+```
+
+## Production Build (Without Docker)
 
 ### Backend
 ```bash

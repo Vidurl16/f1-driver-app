@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: ./F1DriverApp.Api
+      dockerfile: Dockerfile
+    container_name: f1-driver-api
+    ports:
+      - "5000:5000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5000
+      - ConnectionStrings__DefaultConnection=Data Source=/app/data/f1drivers.db
+    volumes:
+      - api-data:/app/data
+    networks:
+      - f1-network
+
+  frontend:
+    build:
+      context: ./f1-driver-frontend
+      dockerfile: Dockerfile
+    container_name: f1-driver-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    networks:
+      - f1-network
+
+volumes:
+  api-data:
+
+networks:
+  f1-network:
+    driver: bridge
