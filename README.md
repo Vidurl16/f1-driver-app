@@ -354,11 +354,6 @@ Potential improvements for the application:
 - Unit and integration tests
 - Docker containerization
 - CI/CD pipeline
-
-## License
-
-This project is for educational and assessment purposes.
-
 ---
 
 **Last Updated**: December 11, 2025
