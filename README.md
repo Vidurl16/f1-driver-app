@@ -4,6 +4,28 @@
 
 This is a full-stack Formula 1 driver management application built with C# (.NET 8) for the backend and React with TypeScript for the frontend. The application provides complete CRUD functionality for managing F1 drivers with clean architecture principles.
 
+## Quick Start (Docker)
+
+The fastest way to run the application:
+
+```bash
+# Clone and navigate to the project
+cd f1-driver-app
+
+# Start the application
+docker-compose up -d
+```
+
+Then open your browser to:
+- **Frontend**: http://localhost
+- **API**: http://localhost:5001
+- **Swagger UI**: http://localhost:5001/swagger
+
+To stop the application:
+```bash
+docker-compose down
+```
+
 ## Technology Stack
 
 ### Backend
@@ -21,8 +43,11 @@ This is a full-stack Formula 1 driver management application built with C# (.NET
 
 ## Prerequisites
 
-Before running the application, ensure you have the following installed:
+### For Docker (Recommended)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- Docker Compose (included with Docker Desktop)
 
+### For Local Development (Optional)
 - [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
 - [Node.js](https://nodejs.org/) (v18 or higher)
 - [npm](https://www.npmjs.com/) (comes with Node.js)
@@ -62,24 +87,19 @@ cd F1DriverApp/F1DriverApp.Api
 dotnet restore
 ```
 
-### Step 3: Create Database Migration
+### Step 3: Run the Application
 
 ```bash
-dotnet ef migrations add InitialCreate
+dotnet run --urls "http://localhost:5001"
 ```
 
-### Step 4: Run the Application
-
-```bash
-dotnet run
-```
+**Note**: We use port 5001 because port 5000 is commonly used by macOS Control Center (AirPlay Receiver).
 
 The API will start on:
-- **HTTP**: http://localhost:5000
-- **HTTPS**: https://localhost:5001
-- **Swagger UI**: http://localhost:5000/swagger
+- **HTTP**: http://localhost:5001
+- **Swagger UI**: http://localhost:5001/swagger
 
-The database will be automatically created and seeded with sample data on first run.
+The database will be automatically created and seeded with sample data on first run. The application uses Entity Framework's `EnsureCreated()` method to initialize the database schema.
 
 ## Frontend Setup and Run
 
@@ -103,6 +123,8 @@ npm run dev
 
 The React application will start on:
 - **URL**: http://localhost:5173
+
+**Note**: When running locally (not in Docker), the frontend will connect to the API at http://localhost:5001/api. When running in Docker, it uses the nginx proxy at /api.
 
 ## API Endpoints
 
@@ -147,10 +169,12 @@ The following REST endpoints are available:
 - DTOs for API contracts
 - Input validation with data annotations
 - Asynchronous operations throughout
-- Entity Framework Core migrations
+- Entity Framework Core with SQLite
+- Automatic database initialization with `EnsureCreated()`
 - Database seeding with sample data
 - CORS enabled for frontend integration
 - Proper HTTP status codes
+- Swagger/OpenAPI documentation
 
 ### Frontend Features
 - List all drivers in a table
@@ -217,11 +241,19 @@ The application seeds the following sample drivers on first run:
 
 ## Development Notes
 
-### Running Both Applications
+### Running Both Applications Locally
 
 1. Open two terminal windows
-2. In terminal 1: Start the backend (runs on port 5000)
+2. In terminal 1: Start the backend (runs on port 5001)
+   ```bash
+   cd F1DriverApp.Api
+   dotnet run --urls "http://localhost:5001"
+   ```
 3. In terminal 2: Start the frontend (runs on port 5173)
+   ```bash
+   cd f1-driver-frontend
+   npm run dev
+   ```
 4. Access the application at http://localhost:5173
 
 ### CORS Configuration
@@ -244,25 +276,46 @@ The frontend uses strict TypeScript mode with:
 
 ## Troubleshooting
 
-### Backend Issues
+### Docker Issues
 
-**Issue**: Migration errors
+**Issue**: Port 5000 already in use (macOS)
+- **Cause**: macOS Control Center uses port 5000 for AirPlay Receiver
+- **Solution**: The docker-compose.yml is already configured to use port 5001. No action needed.
+
+**Issue**: Database errors or "no such table"
 ```bash
-# Solution: Delete existing migrations and recreate
-rm -rf Migrations/
-dotnet ef migrations add InitialCreate
+# Solution: Remove volumes and restart
+docker-compose down -v
+docker-compose up --build
 ```
 
-**Issue**: Port already in use
+**Issue**: Containers not starting
 ```bash
-# Solution: Change port in launchSettings.json or use different port
+# Check container logs
+docker-compose logs api
+docker-compose logs frontend
+```
+
+### Backend Issues (Local Development)
+
+**Issue**: Port 5000 already in use
+```bash
+# Solution: Use port 5001 or another available port
 dotnet run --urls "http://localhost:5001"
+```
+
+**Issue**: Database file locked or corrupted
+```bash
+# Solution: Delete the database file and restart
+rm f1drivers.db
+dotnet run
 ```
 
 ### Frontend Issues
 
 **Issue**: API connection refused
-- Ensure backend is running on http://localhost:5000
+- **Docker**: Ensure containers are running with `docker-compose ps`
+- **Local**: Ensure backend is running on http://localhost:5001
 - Check CORS configuration in backend Program.cs
 
 **Issue**: TypeScript errors
@@ -274,7 +327,7 @@ npm install
 
 ## Docker Deployment (Recommended)
 
-The easiest way to run the entire application is using Docker:
+The easiest way to run the entire application is using Docker.
 
 ### Prerequisites
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
@@ -283,20 +336,34 @@ The easiest way to run the entire application is using Docker:
 ### Run with Docker Compose
 
 ```bash
-# From the project root
+# From the project root - first time or after code changes
 docker-compose up --build
+
+# Or run in detached mode (background)
+docker-compose up -d
 ```
 
-ThiDocker Architecture
+**Access Points:**
+- **Frontend**: http://localhost (port 80)
+- **API**: http://localhost:5001
+- **Swagger UI**: http://localhost:5001/swagger
+
+### Docker Architecture
 
 The application uses a multi-container setup:
 
-- **API Container**: .NET 8 runtime with SQLite database
-- **Frontend Container**: Nginx serving built React app
+- **API Container**: .NET 8 runtime with SQLite database (exposed on port 5001)
+- **Frontend Container**: Nginx serving built React app (exposed on port 80)
 - **Network**: Bridge network for inter-container communication
 - **Volume**: Persistent storage for database
 
 The frontend uses Nginx as a reverse proxy, forwarding `/api` requests to the backend container.
+
+### Important Notes
+
+- **Port 5001**: Used instead of 5000 to avoid conflicts with macOS AirPlay Receiver
+- **Database**: Automatically created and seeded on first run
+- **API URL**: Frontend automatically detects if running in Docker or locally
 
 ## Future Enhancements
 
@@ -345,15 +412,18 @@ npm run build
 
 Potential improvements for the application:
 
-- Authentication and authorization
+- Authentication and authorization (JWT)
 - Search and filter functionality
 - Pagination for driver list
 - Sorting by column
-- Team management CRUD
-- Driver statistics and analytics
+- Team management CRUD operations
+- Driver statistics and analytics dashboard
 - Unit and integration tests
-- Docker containerization
-- CI/CD pipeline
+- CI/CD pipeline with GitHub Actions
+- Kubernetes deployment
+- Redis caching layer
+- API rate limiting
+
 ---
 
 **Last Updated**: December 11, 2025

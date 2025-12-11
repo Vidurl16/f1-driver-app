@@ -1,6 +1,7 @@
 import { DriverDto, CreateDriverDto } from './types';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// Use /api for Docker/production (nginx proxy) or localhost for local development
+const API_BASE_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' && window.location.port === '5173' ? 'http://localhost:5001/api' : '/api');
 
 export const driverApi = {
   async getAllDrivers(): Promise<DriverDto[]> {

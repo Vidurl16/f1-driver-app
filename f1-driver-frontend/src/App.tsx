@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { DriverDto } from './types';
 import { driverApi } from './api';
 import DriverList from './components/DriverList';

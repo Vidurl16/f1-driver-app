@@ -36,8 +36,29 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<F1DriverContext>();
-    context.Database.Migrate();
-    DbInitializer.Initialize(context);
+    try
+    {
+        // Try to ensure database is created
+        context.Database.EnsureCreated();
+        
+        // Verify database has tables by checking if we can query
+        var canQuery = context.Database.CanConnect();
+        if (canQuery)
+        {
+            DbInitializer.Initialize(context);
+        }
+    }
+    catch (Exception ex)
+    {
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while initializing the database.");
+        
+        // Try to delete and recreate the database
+        logger.LogWarning("Attempting to delete and recreate the database...");
+        context.Database.EnsureDeleted();
+        context.Database.EnsureCreated();
+        DbInitializer.Initialize(context);
+    }
 }
 
 // Configure the HTTP request pipeline.
